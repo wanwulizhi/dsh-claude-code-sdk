@@ -1,0 +1,27 @@
+# Bundle wiring for `dsh plugin add` / registry installs.
+# A saved profile entry can override any field below by targeting the id.
+- insert:
+    - id: claude-code-sdk
+      name: dsh-claude-code-sdk
+      config:
+        model: sonnet
+        permissionMode: acceptEdits
+        maxTurns: 100
+        timeoutMs: 600000
+        effort: high
+        # Non-interactive mode denies anything not pre-approved, so the shell
+        # and the file tools are allowed here by default.
+        allowedTools:
+          - Bash
+          - PowerShell
+          - Read
+          - Write
+          - Edit
+          - Glob
+          - Grep
+          - WebFetch
+          - WebSearch
+        # Inject the current DSH conversation (user/assistant text) into the task.
+        includeHistory: true
+        historyMaxMessages: 20
+        historyMaxChars: 12000

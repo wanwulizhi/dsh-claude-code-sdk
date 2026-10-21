@@ -1,0 +1,14 @@
+# 提交到 awesome-dsh-plugin 的条目
+#
+# 用法：把本文件内容另存为 awesome-dsh-plugin 仓库里的
+#   data/plugins/<owner>__<repo>.yml
+# 然后开 PR（一个 PR 最多 3 条）。README 由脚本生成，不要手工改。
+#
+# 提交前把 <owner> 换成你的 GitHub 用户名。
+
+url: https://github.com/<owner>/dsh-claude-code-sdk
+name: <owner>/dsh-claude-code-sdk
+category: tools
+description:
+  en: Delegates a self-contained coding task to the local Claude Code agent through the Claude Agent SDK, and prepends the current DSH conversation history to the task.
+  zh: 通过 Claude Agent SDK 把自包含的编码任务委派给本机 Claude Code，并把当前 DSH 的对话历史附在任务前面。
