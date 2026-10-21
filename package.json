@@ -40,14 +40,14 @@
     "delegation"
   ],
   "license": "MIT",
-  "author": "TODO",
+  "author": "wanwulizhi",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TODO/dsh-claude-code-sdk.git"
+    "url": "git+https://github.com/wanwulizhi/dsh-claude-code-sdk.git"
   },
-  "homepage": "https://github.com/TODO/dsh-claude-code-sdk#readme",
+  "homepage": "https://github.com/wanwulizhi/dsh-claude-code-sdk#readme",
   "bugs": {
-    "url": "https://github.com/TODO/dsh-claude-code-sdk/issues"
+    "url": "https://github.com/wanwulizhi/dsh-claude-code-sdk/issues"
   },
   "publishConfig": {
     "access": "public"
