@@ -21,13 +21,15 @@
 
 ## 安装
 
-```bash
-dsh plugin add dsh-claude-code-sdk
+收录到 [awesome-dsh-plugin](https://awesome-dsh-plugin.com) 之后，可以在 DSH 的 **设置 → 插件** 里搜索安装，或：
+
+```sh
+dsh plugin --profile web add dsh-claude-code-sdk
 ```
 
-或在插件市场里搜索安装。
+安装顺序是「npm 包 → 作者提供的 GitHub Release tarball → 整仓 GitHub 源码」。本包目前只提供源码，因此会走最后一条：克隆仓库后安装依赖。首次安装需要拉取对应平台的 Claude Agent SDK 二进制（约 280 MB），耗时取决于到 GitHub 与 npm 的网络。
 
-安装后无需额外配置即可使用。首次调用会由 npm 拉取对应平台的 SDK 二进制（约 280 MB）。
+安装后无需额外配置即可使用。
 
 ## 注册了什么
 
