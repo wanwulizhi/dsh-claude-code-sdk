@@ -1,7 +1,7 @@
 {
   "name": "dsh-claude-code-sdk",
   "version": "0.1.0",
-  "description": "DSH tool plugin that delegates a self-contained coding task to the local Claude Code agent through the Claude Agent SDK, and injects the current DSH conversation history into the task.",
+  "description": "DSH tool plugin that delegates a self-contained coding task to the local Claude Code agent through the Claude Agent SDK, prepends the current DSH conversation history, and keeps the worker's intermediate tool calls out of the main context.",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
