@@ -28,3 +28,9 @@
         includeHistory: true
         historyMaxMessages: 20
         historyMaxChars: 12000
+        # Snapshot the workspace before/after a delegation: reports which files
+        # changed and enables claude_code_revert.
+        trackChanges: true
+        maxTrackedFileSize: 524288
+        maxTrackedTotalBytes: 67108864
+        keepSnapshots: 20

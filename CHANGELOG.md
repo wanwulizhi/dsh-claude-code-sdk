@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.4.0
+
+Change tracking and revert.
+
+- **Workspace snapshots.** Before a delegation the plugin records every file's
+  `size` + `mtime` and backs up its content (budgeted). After the delegation it rescans and
+  reports `filesChanged` / `added` / `modified` / `removed`, and appends a readable summary
+  to the returned text. Failures mid-delegation also report what was already touched.
+- **New tool `claude_code_revert`.** Restores the workspace to a snapshot: rewrites modified
+  or deleted files and removes files the worker created. Supports `dryRun` for a preview.
+  Only paths recorded in the snapshot are touched, every path is re-checked to stay inside
+  the snapshot root, and files are never removed recursively.
+- **Why this matters here:** `dsh-rewind-plugin` hooks DSH's own `write`/`edit` tools, so
+  files the worker changes inside Claude Code are invisible to it. Verified on this machine:
+  `~/.dsh/rewind-snapshots/` had no snapshot newer than 10-16 despite heavy delegation.
+- New config: `trackChanges` (default `true`), `maxTrackedFileSize` (512 KiB),
+  `maxTrackedTotalBytes` (64 MiB), `keepSnapshots` (20). New per-call parameter
+  `trackChanges`.
+- Snapshot scanning skips `node_modules`, `.git`, build output and other non-source
+  directories; measured at 9 ms for 26 files and 34 ms for 175 files.
+- `allowedTools` still only pre-approves. Narrowing it does **not** shrink the system
+  prompt — use the SDK's `disallowedTools` for that (measured −35% on a single call).
+
 ## 0.3.0
 
 Security and reliability hardening.

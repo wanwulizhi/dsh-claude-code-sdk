@@ -193,6 +193,7 @@ Claude Code 只能看到任务文本 + 注入的对话历史，**看不到文件
 | `effort` | string | | 思考强度 `low` / `medium` / `high` / `xhigh` / `max` |
 | `maxThinkingTokens` | integer | | 思考 token 预算 |
 | `includeHistory` | boolean | | 是否注入 DSH 对话历史，默认取配置值 |
+| `trackChanges` | boolean | | 是否拍快照并报告改动，默认取配置值（`true`）。只读任务可以关掉省开销 |
 
 ### 返回
 
@@ -213,6 +214,55 @@ Claude Code 只能看到任务文本 + 注入的对话历史，**看不到文件
 渲染到对话里时只显示 `output`，不显示金额和 token 数。
 
 ---
+
+## 变更追踪与回退
+
+每次委派前后各扫一次工作区，比对得出改动，并保留可还原的快照。
+
+**为什么需要它**：`dsh-rewind-plugin` 挂在 DSH 自己的 `write` / `edit` 工具上，而 worker 是在 Claude Code 内部改文件，**绕过了这一层**。实测本机 `~/.dsh/rewind-snapshots/` 里最新快照停在 10-16，之后大量委派改文件都没留下快照。所以 worker 的改动原本既看不见、也退不回。
+
+### 返回里多出来的字段
+
+| 字段 | 含义 |
+|---|---|
+| `filesChanged` | 改动过的文件路径（相对 cwd） |
+| `added` / `modified` / `removed` | 三类改动的数量 |
+| `snapshotId` | 这次委派的快照 id，回退时用它 |
+
+正文末尾还会附一段摘要：
+
+```
+---
+改动 2 个文件（快照 mvoo963a-ksfsiv）
+新增 1：created.txt
+修改 1：keep.txt
+```
+
+委派中途失败也会报告已改动的文件——半途而废的改动最需要知道。
+
+### 回退
+
+```
+用户：把刚才 Claude 改的东西撤回
+  → 模型调用 claude_code_revert(snapshotId, dryRun: true) 给用户看清单
+  → 确认后 claude_code_revert(snapshotId) 真正执行
+```
+
+行为：改过的文件写回快照内容、被删的恢复、worker 新建的删除。
+
+### 安全边界
+
+- **只处理快照里记录过的路径**，不会碰你没让动的东西
+- 每条路径都重新校验是否仍在快照 root 之内（防 `../` 越界，已测试拒绝）
+- 只删单个文件，**不递归删目录**
+- 快照 id 有格式校验，非法值直接拒绝
+- 超出备份预算的大文件：能报告改动，但回退时会跳过并说明原因
+
+### 开销
+
+扫描会跳过 `node_modules`、`.git`、`dist`、`build`、`__pycache__` 等非源码目录。实测 26 个文件 9 ms、175 个文件 34 ms。备份有预算上限（单文件 512 KiB、总计 64 MiB），超了就退化为「只报告不可回退」，不会拖慢委派。
+
+只读任务（审计、查代码）建议传 `trackChanges: false`。
 
 ## 注册的技能
 
