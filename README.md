@@ -184,7 +184,8 @@ Claude Code 只能看到任务文本 + 注入的对话历史，**看不到文件
 | 参数 | 类型 | 必填 | 说明 |
 |---|---|---|---|
 | `task` | string | ✅ | 完整、自包含的任务描述 |
-| `cwd` | string | | 工作目录。默认取配置值，再退到 DSH 进程目录 |
+| `context` | string | | leader 自己写的背景摘要，**取代**自动注入的历史。比注入原文省得多 |
+| `cwd` | string | | 工作目录。默认取配置值，再退到会话工作区，最后 DSH 进程目录 |
 | `model` | string | | 本次覆盖模型（`sonnet` / `opus` / `haiku` 或完整 id） |
 | `permissionMode` | string | | `default` / `acceptEdits` / `bypassPermissions` / `plan` / `dontAsk` |
 | `maxTurns` | integer | | 本次最大 agentic 轮数 |
@@ -462,6 +463,33 @@ exec.agent.session.deriveMessages()
 ### 成本影响
 
 见下节「成本与计费」。
+
+### 摘要 vs 原文
+
+注入原文不是唯一选择，也不总是最省。
+
+**先说一个已经修掉的浪费**：DSH 会把内部消息也标成 `role: "user"`——`runtime-context` 快照、`skill-catalog`、`skill-invocation`。它们不是对话内容。实测在一个真实会话里，这些噪音占了注入量的 **39%**（9,561 → 5,808 字符，4,675 → 2,840 tokens）。现在按 `source.kind` 过滤，只保留 `user`（真人发言）和 `model`（模型回复）。
+
+**再算摘要的账**。关键在于：注入的历史会进入 worker 的上下文，**它的每一轮都会重读**。所以省下的不是一份，而是「轮数份」。
+
+| 方案 | 一次性成本 | 每轮占用 |
+|---|---|---|
+| 注入原文 | 0 | 2,840 tokens |
+| 额外调模型生成摘要 | 读 2,840 + 写 ~280 | ~280 tokens |
+| **leader 自己写摘要（`context` 参数）** | **仅 output ~280** | **~280 tokens** |
+
+第三种几乎白送——leader 本来就有完整对话在上下文里，让它写摘要只花输出。所以插件加了 `context` 参数：
+
+```js
+{ task: "把 build.sh 改成支持 --dry-run",
+  context: "用户项目代号 ORION-7，部署脚本在 D:/deploy，改 build.sh 时保持现有参数不变。" }
+```
+
+给了 `context` 就不再注入原始历史。一个跑 10 轮的委派，光这一项就从 28,400 降到 2,800 tokens。
+
+**什么时候别用摘要**：任务依赖对话里的具体措辞、原始报错文本、或大段代码时。摘要会丢细节，worker 找不到就会反复读文件——那比省下的更贵。这种情况传 `includeHistory: true` 保留原文，或把关键片段直接粘进 `task`。
+
+**推荐组合**：`context` 写背景 + `task` 里粘关键片段 + `historyMaxMessages` 降到 4~6 只保留最近几轮原文兜底。
 
 ---
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.4.2
+
+Cheaper history injection.
+
+- **Fix: DSH internal messages were being injected as user speech.** DSH marks
+  `runtime-context` snapshots, `skill-catalog` and `skill-invocation` messages with
+  `role: "user"`, so they were forwarded to the worker as if the user had said them.
+  Measured on a real session: **9,561 → 5,808 characters (4,675 → 2,840 tokens, −39%)**
+  once filtered by `source.kind` to `user` / `model` only.
+- **New `context` parameter.** The leader writes its own background summary and it replaces
+  the auto-injected history. Since the leader already holds the conversation, summarising
+  costs output tokens only — no extra read. Injected text is re-read on every worker turn,
+  so a 10-turn delegation drops from ~28,400 to ~2,800 tokens on this component.
+- Skill documents when to prefer a summary (long conversations, partial relevance) and when
+  not to (tasks that depend on exact wording, original error text, or large code blocks).
+
 ## 0.4.1
 
 Worker-side token savings.
