@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.0
+
+- Adds **Claude Mode**: a toggle in the composer (`conversation.input.right` slot, next to
+  the model selector). Turning it on writes `/claude-mode ` into the draft, so every
+  subsequent message carries the `claude-mode` skill and the model delegates everything to
+  `claude_code`. Turning it off strips the prefix. State is per session and persisted in
+  `localStorage`.
+- Adds the `claude-mode` skill: instructs the leader to delegate every task, not to use
+  read/write/edit/bash itself, and to keep only intent clarification and review.
+- Ships a web client entry (`dsh.client`, `exports["./client"]`).
+- Adds `@deepseek-ai/cordis` to `peerDependencies`.
+
 ## 0.1.0
 
 Initial release.

@@ -1,11 +1,12 @@
 {
   "name": "dsh-claude-code-sdk",
-  "version": "0.1.0",
-  "description": "DSH tool plugin that delegates a self-contained coding task to the local Claude Code agent through the Claude Agent SDK, prepends the current DSH conversation history, and keeps the worker's intermediate tool calls out of the main context.",
+  "version": "0.2.0",
+  "description": "DSH tool plugin that delegates a self-contained coding task to the local Claude Code agent through the Claude Agent SDK, prepends the current DSH conversation history, keeps the worker's intermediate tool calls out of the main context, and adds a Claude Mode toggle to the composer.",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
+    "./client": "./lib/client.js",
     "./package.json": "./package.json"
   },
   "files": [
@@ -21,9 +22,17 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-renderer"
+      ]
     }
   },
   "peerDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.4 <5.0.0-0",
     "@deepseek-ai/dsh-tools": ">=0.2.0-rc.2 <0.3.0-0",
     "@deepseek-ai/schemastery": ">=3.18.1 <4.0.0-0"
   },
