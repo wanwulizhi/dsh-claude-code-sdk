@@ -92,3 +92,22 @@ fs.rmSync(evilDir, { recursive: true, force: true });
 fs.rmSync(outside, { force: true });
 pruneSnapshots(5);
 console.log('\n清理完成');
+
+// 8) 超出文件预算时放弃追踪（而不是给出会误报的截断 diff）
+const smallRoot = path.join(os.tmpdir(), 'ws-budget-' + Date.now());
+fs.mkdirSync(smallRoot, { recursive: true });
+fs.writeFileSync(path.join(smallRoot, 'one.txt'), '1');
+fs.writeFileSync(path.join(smallRoot, 'two.txt'), '2');
+const budget = createSnapshot(smallRoot, { maxFiles: 1 });
+console.log('\n[8] 超预算 | skipped:', budget.skipped, '| 原因:', budget.reason);
+console.log('    判定:', budget.skipped === true && /上限/.test(budget.reason) ? '✅ 放弃追踪' : '❌');
+
+// 9) 扫描被截断时回退只还原、不删除
+const snap2 = createSnapshot(smallRoot, {});
+fs.writeFileSync(path.join(smallRoot, 'three.txt'), '3');
+const rev2 = restoreSnapshot(snap2.id, { maxFiles: 1 });
+console.log('\n[9] 截断回退 | deletionSkipped:', rev2.deletionSkipped, '| 删除数:', rev2.deleted.length);
+console.log('    three.txt 仍在（未被误删）:', fs.existsSync(path.join(smallRoot, 'three.txt')) ? '✅' : '❌');
+
+fs.rmSync(smallRoot, { recursive: true, force: true });
+pruneSnapshots(5);

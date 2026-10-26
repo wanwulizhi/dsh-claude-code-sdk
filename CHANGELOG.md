@@ -16,10 +16,16 @@ Change tracking and revert.
   files the worker changes inside Claude Code are invisible to it. Verified on this machine:
   `~/.dsh/rewind-snapshots/` had no snapshot newer than 10-16 despite heavy delegation.
 - New config: `trackChanges` (default `true`), `maxTrackedFileSize` (512 KiB),
-  `maxTrackedTotalBytes` (64 MiB), `keepSnapshots` (20). New per-call parameter
-  `trackChanges`.
+  `maxTrackedTotalBytes` (64 MiB), `maxTrackedFiles` (8000), `maxTrackedMs` (1000),
+  `keepSnapshots` (20). New per-call parameter `trackChanges`.
+- **Scan budget.** A tree that exceeds the file or time budget is left **untracked** rather
+  than producing a partial diff (two differently-truncated scans would invent added/removed
+  files). Measured: 12 files ≈ 6 ms scan, 175 files ≈ 34 ms, a 20 000-file tree bails at
+  ~0.9 s instead of scanning for 3.5 s.
+- **Revert refuses to delete on a truncated scan** — only restores, and says so, so files it
+  could not enumerate are never removed.
 - Snapshot scanning skips `node_modules`, `.git`, build output and other non-source
-  directories; measured at 9 ms for 26 files and 34 ms for 175 files.
+  directories.
 - `allowedTools` still only pre-approves. Narrowing it does **not** shrink the system
   prompt — use the SDK's `disallowedTools` for that (measured −35% on a single call).
 
