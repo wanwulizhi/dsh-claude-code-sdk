@@ -24,6 +24,12 @@
           - Grep
           - WebFetch
           - WebSearch
+        # Tools to REMOVE from the worker. This is the only lever that shrinks the
+        # worker's system prompt: measured 11,993 -> 7,760 input tokens (-35%) with
+        # the read-only set below. Empty by default; enable it when you only run
+        # read-only delegations.
+        disallowedTools: []
+        # disallowedTools: [Write, Edit, Bash, PowerShell, WebFetch, WebSearch, NotebookEdit, Task, TodoWrite]
         # Inject the current DSH conversation (user/assistant text) into the task.
         includeHistory: true
         historyMaxMessages: 20

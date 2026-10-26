@@ -510,6 +510,39 @@ exec.agent.session.deriveMessages()
 
 不建议把 `historyMaxChars` 调到 30,000 以上——每次委派的基线成本会翻倍，而历史越长、有用比例越低。
 
+### worker 侧的四个杠杆（按实测效果排序）
+
+worker 的开销 = `轮数 × 每轮上下文`。所以要省，先省轮数，再省每轮。
+
+**① 拆任务 —— 唯一的平方项**
+
+worker 每轮都把累积上下文重发一遍。79 轮的审计会话会读到 390 万 cache tokens，拆成 4 个 20 轮的任务大约只要 175 万。**这一项比所有配置加起来都重要。**
+
+**② 只读任务禁工具 —— 实测 -35%**
+
+`allowedTools` 只是预授权，**不会**缩小系统提示。真正移除工具要用 `disallowedTools`：
+
+```js
+allowedTools: ["Read", "Glob", "Grep"],
+disallowedTools: ["Write", "Edit", "Bash", "PowerShell", "WebFetch", "WebSearch", "NotebookEdit", "Task", "TodoWrite"]
+```
+
+实测固定开销 **11,993 → 7,760 input tokens（-35.3%）**，Read 仍可正常读文件。
+
+**③ 写类任务禁掉用不到的工具 —— 实测 -11%**
+
+写任务必须留 `Write`/`Edit`/`Bash`，但 `WebFetch`/`WebSearch`/`NotebookEdit`/`Task`/`TodoWrite` 通常用不上：
+
+```js
+disallowedTools: ["WebFetch", "WebSearch", "NotebookEdit", "Task", "TodoWrite"]
+```
+
+**④ 迭代用 resume，跨任务开新会话**
+
+同一任务继续改，传上次的 `sessionId`——worker 记得读过什么，不用重读。但跨任务一定开新会话，否则会把上一个任务的上下文整包继承下去。
+
+> 补充：`model: "haiku"` 省的是**钱**不是 token（单价低），`effort` 影响的是延迟和 output，两者都不减少 input 量。
+
 ---
 
 ## 故障排查

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.1
+
+Worker-side token savings.
+
+- **New `disallowedTools` config and per-call parameter.** This is the only lever that actually
+  shrinks the worker's system prompt — `allowedTools` merely pre-approves. Measured with the
+  read-only set (Write / Edit / Bash / shell / WebFetch / WebSearch / NotebookEdit / Task /
+  TodoWrite removed): **11,993 → 7,760 input tokens (−35.3%)**, with `Read` still working.
+- Measured the write-task case too: removing only the tools a write task never uses
+  (WebFetch / WebSearch / NotebookEdit / Task / TodoWrite) saves **−10.9%**.
+- Skill now documents the four worker-side levers in order of impact: split tasks (the only
+  quadratic term), disallow tools for read-only work, disallow unused tools for write work,
+  and use `resume` for iterations while starting a fresh session across tasks.
+- Note: `model: "haiku"` saves money, not tokens; `effort` affects latency and output only.
+
 ## 0.4.0
 
 Change tracking and revert.
