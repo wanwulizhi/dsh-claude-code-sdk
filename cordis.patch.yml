@@ -6,8 +6,9 @@
       config:
         model: sonnet
         permissionMode: acceptEdits
-        maxTurns: 100
-        timeoutMs: 600000
+        # 单次委派会独占回合，上限压到 40 轮 / 5 分钟，避免一次调用拖十几分钟
+        maxTurns: 40
+        timeoutMs: 300000
         effort: high
         # Non-interactive mode denies anything not pre-approved, so the shell
         # and the file tools are allowed here by default.
