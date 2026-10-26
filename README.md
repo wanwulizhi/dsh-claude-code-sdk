@@ -278,12 +278,21 @@ Claude Code 只能看到任务文本 + 注入的对话历史，**看不到文件
 
 两个技能都可以在输入框用 `/` 选，也可以直接键入 `/名称`：
 
-| 技能 | 用途 |
-|---|---|
-| `claude-code-delegation` | 按需委派：告诉模型什么时候该派活、任务怎么写、结果怎么质检、多轮怎么 resume。适合偶尔用一次。 |
-| `claude-mode` | 全程委派：进入「所有任务都交给 Claude」的模式。输入框开关打开时会自动带上。 |
+| 技能 | 用途 | 模型可见 |
+|---|---|---|
+| `claude-code-delegation` | 按需委派：任务怎么写、结果怎么质检、多轮怎么 resume | **否**（默认） |
+| `claude-mode` | 全程委派：进入「所有任务都交给 Claude」的模式，输入框开关打开时会自动带上 | 是 |
 
-两者的区别是强度。`claude-code-delegation` 只给方法论，模型仍可自己动手；`claude-mode` 是硬性约定，要求 leader 不用 read/write/bash 自己干活，只负责派活与验收。
+**为什么 `claude-code-delegation` 默认不对模型可见**：如果它出现在模型的技能列表里，模型会读到「什么时候该派活」的判据，于是**即使你没开 Claude Mode 也会自己决定委派**。工具是常驻的，但「要不要用」应该由你决定。
+
+默认策略：
+
+| 场景 | 谁发起委派 |
+|---|---|
+| 没开模式，你也没提 | **不委派**（模型看不到 SOP） |
+| 没开模式，你 `/claude-code-delegation` 或说「用 claude_code 做 X」 | 你发起 |
+| 开了模式 | `claude-mode` 强制每轮委派 |
+| 你希望模型自己判断 | 设 `autoDelegate: true` |
 
 `claude-mode` 的内容刻意写得短——它会在开启期间被每一轮重复注入，长度直接计入 token 成本。
 
@@ -314,16 +323,25 @@ Claude Code 只能看到任务文本 + 注入的对话历史，**看不到文件
 |---|---|---|
 | `model` | `sonnet` | 模型别名或完整 id。若 `~/.claude/settings.json` 里配了模型映射，这里写的是映射前的别名 |
 | `permissionMode` | `acceptEdits` | 权限模式，详见「权限模型」 |
-| `maxTurns` | `100` | 单次委派的最大 agentic 轮数。到顶会报 `Reached maximum number of turns` |
-| `timeoutMs` | `300000` | 单次委派硬超时（毫秒）。超过后插件会 abort 掉 SDK 子进程并抛错（错误含实际超时毫秒数与已产出进度）。默认 300000（5 分钟，见 cordis.patch.yml），代码兜底 600000 |
-| `cwd` | 未设置 | 工作目录。建议显式指定，否则会落在 DSH 进程目录 |
-| `allowedTools` | 见下 | 预授权工具白名单。默认 `Bash, PowerShell, Read, Write, Edit, Glob, Grep, WebFetch, WebSearch` |
+| `allowDangerouslySkipPermissions` | `false` | `bypassPermissions` 的安全开关，不显式开启则拒绝该模式 |
+| `maxTurns` | `40` | 单次委派的最大 agentic 轮数。到顶会报 `Reached maximum number of turns` |
+| `timeoutMs` | `300000` | 单次委派硬超时（毫秒）。超过后插件会 abort 掉 SDK 子进程并抛错（错误含实际超时毫秒数与已产出进度） |
+| `cwd` | 未设置 | 工作目录。优先级：`args.cwd` → `config.cwd` → 会话工作区 → DSH 进程目录（最后一级会附警告） |
+| `allowedTools` | 见下 | **预授权**工具白名单。默认 `Bash, PowerShell, Read, Write, Edit, Glob, Grep, WebFetch, WebSearch`。注意它不缩小系统提示 |
+| `disallowedTools` | `[]` | 真正**移除**工具，唯一能缩小 worker 系统提示的选项。只读集实测 -35% |
 | `pathToClaudeCodeExecutable` | 未设置 | 留空时由 SDK 解析自己捆绑的 CLI（`claude-agent-sdk-<platform>/claude.exe`） |
 | `effort` | `high` | 思考强度 |
 | `maxThinkingTokens` | 未设置 | 思考 token 上限，与 `effort` 二选一即可 |
 | `includeHistory` | `true` | 是否注入 DSH 对话历史 |
 | `historyMaxMessages` | `20` | 最多注入最近多少条消息 |
 | `historyMaxChars` | `12000` | 注入历史的字符预算 |
+| `trackChanges` | `true` | 委派前后拍快照，报告改动并支持回退 |
+| `maxTrackedFileSize` | `524288` | 单个文件的备份上限，超出只报告不可回退 |
+| `maxTrackedTotalBytes` | `67108864` | 备份总预算 |
+| `maxTrackedFiles` | `8000` | 扫描文件数上限，超出则放弃追踪（避免半截 diff 误报） |
+| `maxTrackedMs` | `1000` | 单次扫描耗时上限（毫秒） |
+| `keepSnapshots` | `20` | 保留多少个快照 |
+| `autoDelegate` | `false` | 是否把委派 SOP 暴露给模型，让它自行决定派活。默认关闭，见「注册的技能」 |
 
 工具参数与配置同名时，**工具参数优先**（`args.x ?? config.x`）。注意空数组不会被默认值覆盖——`[]` 是有效值，`??` 只对 `null` / `undefined` 生效，所以显式传 `allowedTools: []` 就是"什么都不预授权"。
 

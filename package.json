@@ -1,6 +1,6 @@
 {
   "name": "dsh-claude-code-sdk",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "DSH tool plugin that delegates a self-contained coding task to the local Claude Code agent through the Claude Agent SDK, prepends the current DSH conversation history, reports which files changed, supports revert, and adds a Claude Mode toggle to the composer.",
   "type": "module",
   "main": "lib/index.js",

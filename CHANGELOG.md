@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.4.3
+
+Delegation is now opt-in.
+
+- **Fix: the leader delegated on its own without Claude Mode.** The `claude-code-delegation`
+  skill was model-invocable, so the model read its "when to delegate" guidance and decided
+  to hand work over even when the mode was off. Verified in a real session: a plain question
+  with no `/claude-mode` prefix still produced a `claude_code` call.
+- The delegation skill is now `modelInvocable: false` / `userInvocable: true` by default, so it
+  stays available through `/claude-code-delegation` but is no longer advertised to the model.
+  Delegation then happens when you ask for it, or when Claude Mode is on.
+- New `autoDelegate` config (default `false`) restores the old behaviour for anyone who wants
+  the model to decide on its own.
+- README: corrected stale entries in the config table (`maxTurns` is 40, not 100; `cwd` now
+  falls back to the session workspace) and documented every tracking option.
+
 ## 0.4.2
 
 Cheaper history injection.

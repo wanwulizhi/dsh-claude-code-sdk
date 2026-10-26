@@ -43,3 +43,8 @@
         maxTrackedFiles: 8000
         maxTrackedMs: 1000
         keepSnapshots: 20
+        # Whether the delegation skill is advertised to the model so it can decide
+        # on its own to hand work over. Off by default: without Claude Mode the
+        # leader should delegate only when you ask. Set true for opportunistic
+        # delegation.
+        autoDelegate: false
