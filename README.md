@@ -255,7 +255,7 @@ Claude Code 只能看到任务文本 + 注入的对话历史，**看不到文件
 | `model` | `sonnet` | 模型别名或完整 id。若 `~/.claude/settings.json` 里配了模型映射，这里写的是映射前的别名 |
 | `permissionMode` | `acceptEdits` | 权限模式，详见「权限模型」 |
 | `maxTurns` | `100` | 单次委派的最大 agentic 轮数。到顶会报 `Reached maximum number of turns` |
-| `timeoutMs` | `600000` | 工具级超时（10 分钟），同时作为 DSH 的工具超时声明 |
+| `timeoutMs` | `300000` | 单次委派硬超时（毫秒）。超过后插件会 abort 掉 SDK 子进程并抛错（错误含实际超时毫秒数与已产出进度）。默认 300000（5 分钟，见 cordis.patch.yml），代码兜底 600000 |
 | `cwd` | 未设置 | 工作目录。建议显式指定，否则会落在 DSH 进程目录 |
 | `allowedTools` | 见下 | 预授权工具白名单。默认 `Bash, PowerShell, Read, Write, Edit, Glob, Grep, WebFetch, WebSearch` |
 | `pathToClaudeCodeExecutable` | 未设置 | 留空时由 SDK 解析自己捆绑的 CLI（`claude-agent-sdk-<platform>/claude.exe`） |
@@ -314,7 +314,9 @@ allowedTools: [Read, Glob, Grep]
 allowedTools: []
 
 # 更宽松：不推荐，等于不做任何限制
+# 用该模式必须同时设 allowDangerouslySkipPermissions: true，风险自负
 permissionMode: bypassPermissions
+allowDangerouslySkipPermissions: true
 ```
 
 `Bash` 与 `PowerShell` 同时列出是刻意的：Windows 上 Claude Code 用 `PowerShell`，其他平台用 `Bash`。多列一个不存在的工具不会报错。
